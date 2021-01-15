@@ -172,10 +172,10 @@ class ExponentialShortPulseGenerator(ShortPulseGenerator):
 
 
 class BoxShortPulseGenerator(ShortPulseGenerator):
-    """
-    Box shape p(t, tau):
-        p(t, tau) = 1, for |t| < tau / 2
-        p(t, tau) = 0, otherwise
+    """Box shape p(t, tau):
+
+    p(t, tau) = 1, for |t| < tau / 2
+    p(t, tau) = 0, otherwise
     """
 
     def __init__(self, tolerance: float = 1e-50):
@@ -191,10 +191,10 @@ class BoxShortPulseGenerator(ShortPulseGenerator):
 
 
 class TriangularShortPulseGenerator(ShortPulseGenerator):
-    """
-    Triangular shape p(t, tau):
-        p(t, tau) = 1 - |t|/tau, for |t| < tau
-        p(t, tau) = 0, otherwise
+    """Triangular shape p(t, tau):
+
+    p(t, tau) = 1 - |t|/tau, for |t| < tau
+    p(t, tau) = 0, otherwise
     """
 
     def __init__(self, tolerance: float = 1e-50):

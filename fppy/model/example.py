@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import forcing as frc
-import fpp_model as fpp
-import pulse_shape as ps
+import fppy.model.forcing as frc
+import fppy.model.fpp_model as fpp
+import fppy.model.pulse_shape as ps
 
 # Simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times.
 
-plt.switch_backend("GTK3Agg")
 model = fpp.FPPModel(gamma=0.1, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
 

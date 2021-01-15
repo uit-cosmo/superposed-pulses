@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-name = "filtered_point_process"
+name = "fppy"
 
 with open("README.md") as f:
     long_description = f.read()
@@ -16,9 +16,9 @@ setup(
     url="https://github.com/uit-cosmo/filtered-point-process",
     license="MiT",
     version="1.0",
-    packages=["filtered_point_process"],
+    packages=["fppy"],
     python_requires=">=3.0",
-    install_requires=["numpy>=1.15.0", "scipy>=1.4.0", "tqdm>=4.50.2"],
+    install_requires=["numpy>=1.15.0", "scipy>=1.4.0", "tqdm>=4.50.2", "matplotlib>=3.2.0"],
     classifiers=[
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",

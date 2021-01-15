@@ -2,8 +2,8 @@ from typing import Callable, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
-import forcing as frc
-import pulse_shape as ps
+import fppy.model.forcing as frc
+import fppy.model.pulse_shape as ps
 
 __COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
 
