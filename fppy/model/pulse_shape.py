@@ -146,24 +146,37 @@ class ShortPulseGenerator(ABC):
 
 
 class ExponentialShortPulseGenerator(ShortPulseGenerator):
-    def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
+    def __init__(
+        self, lam: float = 0, tolerance: float = 1e-50, max_cutoff: float = 1e50
+    ):
         """Exponential pulse generator, the length of the returned array is
         dynamically set to be the shortest to reach a pulse value under the
         given tolerance. That is, if the pulse shape is p(t), the returned
         array will be p(t) with t in [-T, T] such that p(-T), p(T) < tolerance.
+
+        If a lam argument is provided different than 0, the pulse shape will be
+        a double exponential:
+
+        p(t) = exp(t/lam) for t<0; p(t) = exp(-t/(1-lam)) for t>=0.
 
         A max_cutoff is provided to avoid returning pulse arrays of arbitrarily long lengths.
         Parameters
         ----------
         tolerance Maximum error when cutting the pulse.
         max_cutoff
+        lam Asymmetry parameter, defaults to 0 (exponential pulse shape).
         """
         super(ExponentialShortPulseGenerator, self).__init__(tolerance)
         self._max_cutoff = max_cutoff
+        self.lam = lam
 
     def get_pulse(self, times: np.ndarray, duration: float) -> np.ndarray:
         kern = np.zeros(len(times))
-        kern[times >= 0] = np.exp(-times[times >= 0] / duration)
+        if self.lam == 0:
+            kern[times >= 0] = np.exp(-times[times >= 0] / duration)
+            return kern
+        kern[times >= 0] = np.exp(-times[times >= 0] / (duration * (1 - self.lam)))
+        kern[times < 0] = np.exp(times[times < 0] / (duration * self.lam))
         return kern
 
     def get_cutoff(self, duration: float) -> float:

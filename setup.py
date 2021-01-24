@@ -18,7 +18,12 @@ setup(
     version="1.0",
     packages=["fppy"],
     python_requires=">=3.0",
-    install_requires=["numpy>=1.15.0", "scipy>=1.4.0", "tqdm>=4.50.2", "matplotlib>=3.2.0"],
+    install_requires=[
+        "numpy>=1.15.0",
+        "scipy>=1.4.0",
+        "tqdm>=4.50.2",
+        "matplotlib>=3.2.0",
+    ],
     classifiers=[
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
