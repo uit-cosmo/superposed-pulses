@@ -1,3 +1,3 @@
-from .forcing import *
-from .fpp_model import *
-from .pulse_shape import *
+from fppy.model.forcing import *
+from fppy.model.fpp_model import *
+from fppy.model.pulse_shape import *

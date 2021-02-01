@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
-import fppy.model.forcing as frc
 import fppy.model.fpp_model as fpp
 import fppy.model.pulse_shape as ps
 

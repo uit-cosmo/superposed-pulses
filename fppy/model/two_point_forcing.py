@@ -6,8 +6,12 @@ import numpy as np
 
 class TwoPointForcing:
     """Container class with the signals forcing containing arrival times,
-    amplitudes and durations for all the pulses for both signals. Random variables for different pulses are independent, but
-    random variables for a single pulse may be correlated, even in different points."""
+    amplitudes and durations for all the pulses for both signals.
+
+    Random variables for different pulses are independent, but random
+    variables for a single pulse may be correlated, even in different
+    points.
+    """
 
     def __init__(
         self,
@@ -55,8 +59,9 @@ class TwoPointForcing:
 
 
 class TwoPointForcingGenerator:
-    """
-    Responsible of generating a forcing for a two point model. The forcing consists of a set of A_k, B_k, tau_Ak, tau_Bk, s_k, t_k
+    """Responsible of generating a forcing for a two point model.
+
+    The forcing consists of a set of A_k, B_k, tau_Ak, tau_Bk, s_k, t_k
     random variables or each pulse.
     """
 
