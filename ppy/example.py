@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import fppy.model.forcing as frc
-import fppy.model.fpp_model as fpp
-import fppy.model.pulse_shape as ps
+import ppy.forcing as frc
+import ppy.fpp_model as fpp
+import ppy.pulse_shape as ps
 
 # Simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times.
 
@@ -71,8 +71,7 @@ class MyFancyForcingGenerator(frc.ForcingGenerator):
         )
 
     def set_amplitude_distribution(
-        self,
-        amplitude_distribution_function,
+        self, amplitude_distribution_function,
     ):
         pass
 

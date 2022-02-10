@@ -58,8 +58,7 @@ class ForcingGenerator(ABC):
 
     @abstractmethod
     def set_amplitude_distribution(
-        self,
-        amplitude_distribution_function: Callable[[int], np.ndarray],
+        self, amplitude_distribution_function: Callable[[int], np.ndarray],
     ):
         raise NotImplementedError
 
@@ -91,8 +90,7 @@ class StandardForcingGenerator(ForcingGenerator):
         return Forcing(total_pulses, arrival_times, amplitudes, durations)
 
     def set_amplitude_distribution(
-        self,
-        amplitude_distribution_function: Callable[[int], np.ndarray],
+        self, amplitude_distribution_function: Callable[[int], np.ndarray],
     ):
         self._amplitude_distribution = amplitude_distribution_function
 
