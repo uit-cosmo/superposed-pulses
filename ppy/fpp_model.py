@@ -2,13 +2,13 @@ from typing import Callable, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
-from fppy.model.forcing import (
+from ppy.forcing import (
     Forcing,
     StandardForcingGenerator,
     ForcingGenerator,
     PulseParameters,
 )
-from fppy.model.pulse_shape import (
+from ppy.pulse_shape import (
     ShortPulseGenerator,
     ExponentialShortPulseGenerator,
     PulseGenerator,
@@ -127,8 +127,7 @@ class FPPModel:
         """
         if isinstance(self._pulse_generator, PulseGenerator):
             signal += pulse_parameters.amplitude * self._pulse_generator.get_pulse(
-                self._times - pulse_parameters.arrival_time,
-                pulse_parameters.duration,
+                self._times - pulse_parameters.arrival_time, pulse_parameters.duration,
             )
             return
 

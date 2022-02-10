@@ -19,7 +19,7 @@ setup(
     download_url="https://github.com/uit-cosmo/3ppy/archive/refs/tags/1.1.tar.gz",
     license="MiT",
     version="1.1",
-    packages=["3ppy"],
+    packages=["ppy"],
     python_requires=">=3.0",
     install_requires=[
         "numpy>=1.15.0",
