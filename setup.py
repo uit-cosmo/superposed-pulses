@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-name = "fppy"
+name = "3ppy"
 
 with open("README.md") as f:
     long_description = f.read()
@@ -11,12 +11,15 @@ here = os.path.abspath(os.path.dirname(__file__))
 setup(
     name=name,
     description="Python scripts used by the fusion energy group at UiT The Arctic University of Norway.",
+    author="Juan Manuel Losada",
+    author_email="juan.m.losada@uit.no",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/uit-cosmo/filtered-point-process",
+    download_url="https://github.com/uit-cosmo/3ppy/archive/refs/tags/1.0.tar.gz",
     license="MiT",
     version="1.0",
-    packages=["fppy"],
+    packages=["3ppy"],
     python_requires=">=3.0",
     install_requires=[
         "numpy>=1.15.0",
