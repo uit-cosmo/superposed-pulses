@@ -18,7 +18,7 @@ setup(
     url="https://github.com/uit-cosmo/filtered-point-process",
     download_url="https://github.com/uit-cosmo/3ppy/archive/refs/tags/1.1.tar.gz",
     license="MiT",
-    version="1.1",
+    version="1.2",
     packages=["model"],
     python_requires=">=3.0",
     install_requires=[
