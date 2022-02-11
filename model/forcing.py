@@ -45,7 +45,7 @@ class Forcing:
 
 
 class ForcingGenerator(ABC):
-    """Abstract class used by FPPModels to generate forcing.
+    """Abstract class used by PointModel to generate forcing.
 
     Implementations of this class should have a get_forcing method,
     returning a forcing with arrival times, amplitudes and durations for

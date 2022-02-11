@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import fppy.model.forcing as frc
-import fppy.model.fpp_model as fpp
-import fppy.model.pulse_shape as ps
+import model.forcing as frc
+import model.point_model as pm
+import model.pulse_shape as ps
 
 # Simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times.
 
-model = fpp.FPPModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
 
 plt.plot(times, signal)
@@ -15,7 +15,7 @@ plt.show()
 
 # Double exponential shape
 
-model = fpp.FPPModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 model.set_pulse_shape(ps.StandardPulseGenerator("2-exp", lam=0.35))
 times, signal = model.make_realization()
 
@@ -25,7 +25,7 @@ plt.show()
 
 # Say you want to customise your model a bit: use constant amplitude distribution, and box pulse shapes
 
-model = fpp.FPPModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 model.set_amplitude_distribution("deg")
 model.set_pulse_shape(ps.BoxShortPulseGenerator())
 
@@ -37,7 +37,7 @@ plt.show()
 # If you want to implement your own distributions, you can do so by setting a custom ForcingGenerator. Say you want half
 # of your pulses to have amplitude 1, and the other half to have amplitude 2.
 
-model = fpp.FPPModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 my_forcing_gen = frc.StandardForcingGenerator()
 my_forcing_gen.set_amplitude_distribution(
     lambda k: np.random.randint(low=1, high=3, size=k)
@@ -80,7 +80,7 @@ class MyFancyForcingGenerator(frc.ForcingGenerator):
         pass
 
 
-model = fpp.FPPModel(gamma=10, total_duration=1000, dt=0.01)
+model = pm.PointModel(gamma=10, total_duration=1000, dt=0.01)
 model.set_custom_forcing_generator(MyFancyForcingGenerator())
 
 times, s = model.make_realization()

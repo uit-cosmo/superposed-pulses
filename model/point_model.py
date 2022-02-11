@@ -2,13 +2,13 @@ from typing import Callable, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
-from fppy.model.forcing import (
+from model.forcing import (
     Forcing,
     StandardForcingGenerator,
     ForcingGenerator,
     PulseParameters,
 )
-from fppy.model.pulse_shape import (
+from model.pulse_shape import (
     ShortPulseGenerator,
     ExponentialShortPulseGenerator,
     PulseGenerator,
@@ -28,8 +28,8 @@ def _get_common_distribution(
         raise NotImplementedError
 
 
-class FPPModel:
-    """FPPModel is a container for all model parameters and is responsible of
+class PointModel:
+    """PointModel is a container for all model parameters and is responsible of
     generating a realization of the process through make_realization.
 
     Uses a ForcingGenerator to generate the forcing, this is by default
