@@ -184,6 +184,34 @@ class ExponentialShortPulseGenerator(ShortPulseGenerator):
         return min(cutoff, self._max_cutoff)
 
 
+class LorentzShortPulseGenerator(ShortPulseGenerator):
+    def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
+        """Lorentz pulse generator, the length of the returned array is
+        dynamically set to be the shortest to reach a pulse value under the
+        given tolerance. That is, if the pulse shape is p(t), the returned
+        array will be p(t) with t in [-T, T] such that p(-T), p(T) < tolerance.
+
+        p(t) = 1/(t^2 + 1).
+
+        A max_cutoff is provided to avoid returning pulse arrays of arbitrarily long lengths.
+        Parameters
+        ----------
+        tolerance Maximum error when cutting the pulse.
+        max_cutoff
+        """
+        super(LorentzShortPulseGenerator, self).__init__(tolerance)
+        self._max_cutoff = max_cutoff
+
+    def get_pulse(self, times: np.ndarray, duration: float) -> np.ndarray:
+        kern = np.zeros(len(times))
+        kern = 1.0 / (times ** 2 + 1)
+        return kern
+
+    def get_cutoff(self, duration: float) -> float:
+        cutoff = np.sqrt(1.0 / (self.tolerance) - 1)
+        return min(cutoff, self._max_cutoff)
+
+
 class BoxShortPulseGenerator(ShortPulseGenerator):
     """Box shape p(t, tau):
 
