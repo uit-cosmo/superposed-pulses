@@ -191,7 +191,7 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
         given tolerance. That is, if the pulse shape is p(t), the returned
         array will be p(t) with t in [-T, T] such that p(-T), p(T) < tolerance.
 
-        p(t) = 1/(t^2 + 1).
+        p(t) = 1/ (pi (t^2 + 1)).
 
         A max_cutoff is provided to avoid returning pulse arrays of arbitrarily long lengths.
         Parameters
@@ -204,11 +204,11 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
 
     def get_pulse(self, times: np.ndarray, duration: float) -> np.ndarray:
         kern = np.zeros(len(times))
-        kern = 1.0 / (times ** 2 + 1)
+        kern = (np.pi * (1 + (times / duration) ** 2)) ** (-1)
         return kern
 
     def get_cutoff(self, duration: float) -> float:
-        cutoff = np.sqrt(1.0 / (self.tolerance) - 1)
+        cutoff = np.sqrt(1.0 / (self.tolerance * np.pi) - 1)
         return min(cutoff, self._max_cutoff)
 
 
