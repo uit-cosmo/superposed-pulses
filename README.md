@@ -20,9 +20,7 @@ pip install -e .
 The simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times, write
 ```Python
 import matplotlib.pyplot as plt
-import model.forcing as frc
 import model.point_model as pm
-import model.pulse_shape as 
 
 model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
