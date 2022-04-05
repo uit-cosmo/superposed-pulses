@@ -113,6 +113,22 @@ class PointModel:
         """
         self._pulse_generator = pulse_generator
 
+    def add_noise(self, noise_to_signal_ratio: float, seed: Union[None, int]= None, noise_type: str = "additive"):
+        """ 
+        Adds noise to the realization.
+        Parameters
+        ----------
+        noise_to_signal_ratio: float, defined as X_rms/S_rms where X is noise and S is signal.
+        seed: None or int, seed for the noise generator
+        noise_type: str
+            "additive": additive noise
+            "dynamic": dynamic noise
+            "both": both additive and dynamic noise
+        """
+        assert noise_type in {"additive", "dynamic", "both"}
+        assert seed is None or isinstance(seed, int)
+        assert noise_to_signal_ratio >= 0
+
     def _add_pulse_to_signal(
         self, signal: np.ndarray, pulse_parameters: PulseParameters
     ):
