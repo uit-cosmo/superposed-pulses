@@ -232,7 +232,7 @@ class GaussianShortPulseGenerator(ShortPulseGenerator):
         return kern
 
     def get_cutoff(self, duration: float) -> float:
-        cutoff = np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * self.tolerance))
+        cutoff = duration * np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * self.tolerance))
         return min(cutoff, self._max_cutoff)
 
 
