@@ -208,7 +208,7 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
         return kern
 
     def get_cutoff(self, duration: float) -> float:
-        cutoff = np.sqrt(1.0 / (self.tolerance * np.pi) - 1)
+        cutoff = duration * np.sqrt(1.0 / (self.tolerance * np.pi) - 1)
         return min(cutoff, self._max_cutoff)
 
 
