@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-
 import numpy as np
 from typing import Callable
 import warnings
@@ -34,7 +33,7 @@ class PulseGenerator(ABC):
 class StandardPulseGenerator(PulseGenerator):
     """Generates all pulse shapes previously supported."""
 
-    __SHAPE_NAMES__ = {"1-exp", "lorentz", "2-exp"}
+    __SHAPE_NAMES__ = {"1-exp", "lorentz", "2-exp", "gaussian"}
     # TODO: Implement the others
 
     def __init__(self, shape_name: str = "1-exp", **kwargs):
@@ -44,7 +43,7 @@ class StandardPulseGenerator(PulseGenerator):
         shape_name Should be one of StandardPulseShapeGenerator.__SHAPE_NAMES__
         kwargs Additional arguments to be passed to special shapes:
             - "2-exp":
-                - "lam" parameter for the asymmetry parameter
+            - "lam" parameter for the asymmetry parameter
         """
         assert (
             shape_name in StandardPulseGenerator.__SHAPE_NAMES__
@@ -72,6 +71,8 @@ class StandardPulseGenerator(PulseGenerator):
             return StandardPulseGenerator._get_double_exponential_shape
         if shape_name == "lorentz":
             return StandardPulseGenerator._get_lorentz_shape
+        if shape_name == "gaussian":
+            return StandardPulseGenerator._get_gaussian_shape
 
     @staticmethod
     def _get_exponential_shape(
@@ -95,6 +96,10 @@ class StandardPulseGenerator(PulseGenerator):
         kern[times < 0] = np.exp(times[times < 0] / lam / duration)
         kern[times >= 0] = np.exp(-times[times >= 0] / (1 - lam) / duration)
         return kern
+
+    @staticmethod
+    def _get_gaussian_shape(times: np.ndarray, duration: float, kwargs) -> np.ndarray:
+        return np.exp(-((times / duration) ** 2) / 2) / np.sqrt(2 * np.pi)
 
 
 class ShortPulseGenerator(ABC):
