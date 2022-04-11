@@ -217,6 +217,25 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
         return min(cutoff, self._max_cutoff)
 
 
+class GaussianShortPulseGenerator(ShortPulseGenerator):
+    def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
+        """ 
+        Gaussian pulse generator.
+        
+        """
+        super(GaussianShortPulseGenerator, self).__init__(tolerance)
+        self._max_cutoff = max_cutoff
+
+    def get_pulse(self, times: np.ndarray, duration: float) -> np.ndarray:
+        kern = np.zeros(len(times))
+        kern = np.exp(-((times / duration) ** 2) / 2) / np.sqrt(2 * np.pi)
+        return kern
+
+    def get_cutoff(self, duration: float) -> float:
+        cutoff = np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * self.tolerance))
+        return min(cutoff, self._max_cutoff)
+
+
 class BoxShortPulseGenerator(ShortPulseGenerator):
     """Box shape p(t, tau):
 
