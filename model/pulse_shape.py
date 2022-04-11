@@ -219,9 +219,9 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
 
 class GaussianShortPulseGenerator(ShortPulseGenerator):
     def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
-        """ 
+        """
         Gaussian pulse generator.
-        
+
         """
         super(GaussianShortPulseGenerator, self).__init__(tolerance)
         self._max_cutoff = max_cutoff
