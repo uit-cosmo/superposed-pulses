@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-
 import numpy as np
 from typing import Callable
 import warnings
@@ -34,7 +33,7 @@ class PulseGenerator(ABC):
 class StandardPulseGenerator(PulseGenerator):
     """Generates all pulse shapes previously supported."""
 
-    __SHAPE_NAMES__ = {"1-exp", "lorentz", "2-exp"}
+    __SHAPE_NAMES__ = {"1-exp", "lorentz", "2-exp", "gaussian"}
     # TODO: Implement the others
 
     def __init__(self, shape_name: str = "1-exp", **kwargs):
@@ -44,7 +43,7 @@ class StandardPulseGenerator(PulseGenerator):
         shape_name Should be one of StandardPulseShapeGenerator.__SHAPE_NAMES__
         kwargs Additional arguments to be passed to special shapes:
             - "2-exp":
-                - "lam" parameter for the asymmetry parameter
+            - "lam" parameter for the asymmetry parameter
         """
         assert (
             shape_name in StandardPulseGenerator.__SHAPE_NAMES__
@@ -72,6 +71,8 @@ class StandardPulseGenerator(PulseGenerator):
             return StandardPulseGenerator._get_double_exponential_shape
         if shape_name == "lorentz":
             return StandardPulseGenerator._get_lorentz_shape
+        if shape_name == "gaussian":
+            return StandardPulseGenerator._get_gaussian_shape
 
     @staticmethod
     def _get_exponential_shape(
@@ -95,6 +96,10 @@ class StandardPulseGenerator(PulseGenerator):
         kern[times < 0] = np.exp(times[times < 0] / lam / duration)
         kern[times >= 0] = np.exp(-times[times >= 0] / (1 - lam) / duration)
         return kern
+
+    @staticmethod
+    def _get_gaussian_shape(times: np.ndarray, duration: float, kwargs) -> np.ndarray:
+        return np.exp(-((times / duration) ** 2) / 2) / np.sqrt(2 * np.pi)
 
 
 class ShortPulseGenerator(ABC):
@@ -209,6 +214,36 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
 
     def get_cutoff(self, duration: float) -> float:
         cutoff = duration * np.sqrt(1.0 / (self.tolerance * np.pi) - 1)
+        return min(cutoff, self._max_cutoff)
+
+
+class GaussianShortPulseGenerator(ShortPulseGenerator):
+    def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
+        """
+        Gaussian pulse generator. The length of the returned array is
+        dynamically set to be the shortest to reach a pulse value under the
+        given tolerance. That is, if the pulse shape is p(t), the returned
+        array will be p(t) with t in [-T, T] such that p(-T), p(T) < tolerance.
+
+        p(t) = exp(-(t)^2 / 2) / sqrt(2*pi).
+
+        A max_cutoff is provided to avoid returning pulse arrays of arbitrarily long lengths.
+        Parameters
+        ----------
+        tolerance Maximum error when cutting the pulse.
+        max_cutoff
+
+        """
+        super(GaussianShortPulseGenerator, self).__init__(tolerance)
+        self._max_cutoff = max_cutoff
+
+    def get_pulse(self, times: np.ndarray, duration: float) -> np.ndarray:
+        kern = np.zeros(len(times))
+        kern = np.exp(-((times / duration) ** 2) / 2) / np.sqrt(2 * np.pi)
+        return kern
+
+    def get_cutoff(self, duration: float) -> float:
+        cutoff = duration * np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * self.tolerance))
         return min(cutoff, self._max_cutoff)
 
 
