@@ -220,7 +220,18 @@ class LorentzShortPulseGenerator(ShortPulseGenerator):
 class GaussianShortPulseGenerator(ShortPulseGenerator):
     def __init__(self, tolerance: float = 1e-50, max_cutoff: float = 1e50):
         """
-        Gaussian pulse generator.
+        Gaussian pulse generator. The length of the returned array is
+        dynamically set to be the shortest to reach a pulse value under the
+        given tolerance. That is, if the pulse shape is p(t), the returned
+        array will be p(t) with t in [-T, T] such that p(-T), p(T) < tolerance.
+
+        p(t) = exp(-(t)^2 / 2) / sqrt(2*pi).
+
+        A max_cutoff is provided to avoid returning pulse arrays of arbitrarily long lengths.
+        Parameters
+        ----------
+        tolerance Maximum error when cutting the pulse.
+        max_cutoff
 
         """
         super(GaussianShortPulseGenerator, self).__init__(tolerance)
