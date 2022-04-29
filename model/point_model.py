@@ -57,7 +57,7 @@ class PointModel:
             self._add_pulse_to_signal(result, pulse_parameters)
 
         if self._noise is not None:
-            result += self._noise
+            result += self._discretize_noise()
 
         self._last_used_forcing = forcing
         return self._times, result
@@ -124,9 +124,9 @@ class PointModel:
         noise_to_signal_ratio: float,
         seed: Union[None, int] = None,
         noise_type: str = "additive",
-    ):
+    ) -> None:
         """
-        Adds noise to the realization.
+        Specifies noise for realization.
         Parameters
         ----------
         noise_to_signal_ratio: float, defined as X_rms/S_rms where X is noise and S is signal.
@@ -140,30 +140,37 @@ class PointModel:
         assert seed is None or isinstance(seed, int)
         assert noise_to_signal_ratio >= 0
 
-        random_number_generator = np.random.RandomState(seed=seed)
+        self._noise_type = noise_type
+        self._noise_random_number_generator = np.random.RandomState(seed=seed)
         mean_amplitude = self._forcing_generator.get_forcing(
             self._times, gamma=self.gamma
         ).amplitudes.mean()
-        sigma = np.sqrt(noise_to_signal_ratio * self.gamma) * mean_amplitude
+        self._sigma = np.sqrt(noise_to_signal_ratio * self.gamma) * mean_amplitude
 
         self._noise = np.zeros(len(self._times))
 
-        if noise_type in {"additive", "both"}:
-            self._noise += sigma * random_number_generator.normal(size=len(self._times))
+    def _discretize_noise(self) -> np.ndarray:
+        """Discretizes noise for the realization"""
 
-        if noise_type in {"dynamic", "both"}:
-            print(self._times)
+        if self._noise_type in {"additive", "both"}:
+            self._noise += self._sigma * self._noise_random_number_generator.normal(
+                size=len(self._times)
+            )
+
+        if self._noise_type in {"dynamic", "both"}:
             forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
-            # use first pulse since all pulses have the same duration
+            # use first pulse since all pulses must have the same duration
             pulse_parameters = forcing.get_pulse_parameters(0)
             kern = self._pulse_generator.get_pulse(
                 np.arange(-self._times[-1] / 2, self._times[-1] / 2, self.dt),
                 pulse_parameters.duration,
             )
-            dW = random_number_generator.normal(
+            dW = self._noise_random_number_generator.normal(
                 scale=np.sqrt(2 * self.dt), size=len(self._times)
             )
-            self._noise += sigma * fftconvolve(dW, kern, "same")
+            self._noise += self._sigma * fftconvolve(dW, kern, "same")
+
+        return self._noise
 
     def _add_pulse_to_signal(
         self, signal: np.ndarray, pulse_parameters: PulseParameters
