@@ -51,6 +51,7 @@ class PointModel:
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
         forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
+        self._last_used_forcing = forcing
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters = forcing.get_pulse_parameters(k)
@@ -59,7 +60,6 @@ class PointModel:
         if self._noise is not None:
             result += self._discretize_noise()
 
-        self._last_used_forcing = forcing
         return self._times, result
 
     def get_last_used_forcing(self) -> Forcing:
@@ -158,12 +158,15 @@ class PointModel:
             )
 
         if self._noise_type in {"dynamic", "both"}:
-            forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
-            # use first pulse since all pulses must have the same duration
-            pulse_parameters = forcing.get_pulse_parameters(0)
+            durations = self._last_used_forcing.durations
+            pulse_duration_constant = np.all(durations == durations[0])
+            assert (
+                pulse_duration_constant
+            ), "Dynamic noise is only applicable for constant duration times."
+
             kern = self._pulse_generator.get_pulse(
                 np.arange(-self._times[-1] / 2, self._times[-1] / 2, self.dt),
-                pulse_parameters.duration,
+                durations[0],
             )
             dW = self._noise_random_number_generator.normal(
                 scale=np.sqrt(2 * self.dt), size=len(self._times)
