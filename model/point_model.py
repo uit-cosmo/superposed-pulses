@@ -51,14 +51,15 @@ class PointModel:
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
         forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
-        self._last_used_forcing = forcing
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters = forcing.get_pulse_parameters(k)
             self._add_pulse_to_signal(result, pulse_parameters)
 
         if self._noise is not None:
-            result += self._discretize_noise()
+            result += self._discretize_noise(forcing)
+
+        self._last_used_forcing = forcing
 
         return self._times, result
 
@@ -149,7 +150,7 @@ class PointModel:
 
         self._noise = np.zeros(len(self._times))
 
-    def _discretize_noise(self) -> np.ndarray:
+    def _discretize_noise(self, forcing: Forcing) -> np.ndarray:
         """Discretizes noise for the realization"""
 
         if self._noise_type in {"additive", "both"}:
@@ -158,7 +159,7 @@ class PointModel:
             )
 
         if self._noise_type in {"dynamic", "both"}:
-            durations = self._last_used_forcing.durations
+            durations = forcing.durations
             pulse_duration_constant = np.all(durations == durations[0])
             assert (
                 pulse_duration_constant
