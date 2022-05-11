@@ -25,7 +25,6 @@ setup(
         "numpy>=1.15.0",
         "scipy>=1.4.0",
         "tqdm>=4.50.2",
-        "matplotlib>=3.2.0",
     ],
     classifiers=[
         "Intended Audience :: Education",
