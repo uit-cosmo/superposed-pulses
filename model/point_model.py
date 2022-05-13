@@ -13,6 +13,8 @@ from model.pulse_shape import (
     ExponentialShortPulseGenerator,
     PulseGenerator,
 )
+from scipy.signal import fftconvolve
+
 
 __COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
 
@@ -44,6 +46,7 @@ class PointModel:
         self._forcing_generator: ForcingGenerator = StandardForcingGenerator()
         self._pulse_generator: ShortPulseGenerator = ExponentialShortPulseGenerator()
         self._last_used_forcing: Forcing = None
+        self._noise = None
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
@@ -53,7 +56,11 @@ class PointModel:
             pulse_parameters = forcing.get_pulse_parameters(k)
             self._add_pulse_to_signal(result, pulse_parameters)
 
+        if self._noise is not None:
+            result += self._discretize_noise(forcing)
+
         self._last_used_forcing = forcing
+
         return self._times, result
 
     def get_last_used_forcing(self) -> Forcing:
@@ -112,6 +119,62 @@ class PointModel:
         pulse_shape Instance of PulseShape, get_pulse will be called for each pulse when making a realization.
         """
         self._pulse_generator = pulse_generator
+
+    def add_noise(
+        self,
+        noise_to_signal_ratio: float,
+        seed: Union[None, int] = None,
+        noise_type: str = "additive",
+    ) -> None:
+        """
+        Specifies noise for realization.
+        Parameters
+        ----------
+        noise_to_signal_ratio: float, defined as X_rms/S_rms where X is noise and S is signal.
+        seed: None or int, seed for the noise generator
+        noise_type: str
+            "additive": additive noise
+            "dynamic": dynamic noise (only applicable for constant duration times)
+            "both": both additive and dynamic noise
+        """
+        assert noise_type in {"additive", "dynamic", "both"}
+        assert seed is None or isinstance(seed, int)
+        assert noise_to_signal_ratio >= 0
+
+        self._noise_type = noise_type
+        self._noise_random_number_generator = np.random.RandomState(seed=seed)
+        mean_amplitude = self._forcing_generator.get_forcing(
+            self._times, gamma=self.gamma
+        ).amplitudes.mean()
+        self._sigma = np.sqrt(noise_to_signal_ratio * self.gamma) * mean_amplitude
+
+        self._noise = np.zeros(len(self._times))
+
+    def _discretize_noise(self, forcing: Forcing) -> np.ndarray:
+        """Discretizes noise for the realization"""
+
+        if self._noise_type in {"additive", "both"}:
+            self._noise += self._sigma * self._noise_random_number_generator.normal(
+                size=len(self._times)
+            )
+
+        if self._noise_type in {"dynamic", "both"}:
+            durations = forcing.durations
+            pulse_duration_constant = np.all(durations == durations[0])
+            assert (
+                pulse_duration_constant
+            ), "Dynamic noise is only applicable for constant duration times."
+
+            kern = self._pulse_generator.get_pulse(
+                np.arange(-self._times[-1] / 2, self._times[-1] / 2, self.dt),
+                durations[0],
+            )
+            dW = self._noise_random_number_generator.normal(
+                scale=np.sqrt(2 * self.dt), size=len(self._times)
+            )
+            self._noise += self._sigma * fftconvolve(dW, kern, "same")
+
+        return self._noise
 
     def _add_pulse_to_signal(
         self, signal: np.ndarray, pulse_parameters: PulseParameters

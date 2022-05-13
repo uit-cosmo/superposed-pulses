@@ -22,6 +22,14 @@ times, signal = model.make_realization()
 plt.plot(times, signal)
 plt.show()
 
+# Adding noise to the signal
+
+model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model.add_noise(noise_to_signal_ratio=0.01, noise_type="additive", seed=None)
+times, signal = model.make_realization()
+
+plt.plot(times, signal)
+plt.show()
 
 # Say you want to customise your model a bit: use constant amplitude distribution, and box pulse shapes
 
