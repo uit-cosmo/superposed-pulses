@@ -5,7 +5,7 @@ import numpy as np
 
 
 class TwoPointForcing:
-    """Container class with the signals forcing containing arrival times,
+    """Container class with the signal's forcing containing arrival times,
     amplitudes and durations for all the pulses for both signals.
 
     Random variables for different pulses are independent, but random
@@ -59,10 +59,16 @@ class TwoPointForcing:
 
 
 class TwoPointForcingGenerator:
-    """Responsible of generating a forcing for a two point model.
+    """Responsible for generating a forcing for a two point model.
 
-    The forcing consists of a set of A_k, B_k, tau_Ak, tau_Bk, s_k, t_k
-    random variables or each pulse.
+    The forcing consists of a set of amplitudes, durations, delays and arrival times.
+        amplitudes_a and amplitudes_b are the amplitudes at each point, respectively. By default,
+        they are exponentially distributed and uncorrelated.
+        durations_a and durations_b are the duration times at each point, respectively. By
+        default, they are equal and degenerate distributed.
+        delays are the delays of arrival times between point B and point A. By default,
+        they are degenerate distributed.
+        arrival_times are the arrival times at point A.
     """
 
     def __init__(self):
@@ -79,7 +85,7 @@ class TwoPointForcingGenerator:
         )
         amplitudes_a = self._amplitude_distribution(total_pulses)
         durations_a = self._duration_distribution(total_pulses)
-        amplitudes_b = amplitudes_a * 0.5
+        amplitudes_b = self._amplitude_distribution(total_pulses)
         durations_b = durations_a
         delays = self._delay_distribution(total_pulses)
         return TwoPointForcing(
