@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Callable, Tuple, Union
 
 import numpy as np
@@ -13,8 +14,8 @@ from model.pulse_shape import (
     ExponentialShortPulseGenerator,
     PulseGenerator,
 )
+from model.two_point_forcing import TwoPointForcingGenerator
 from scipy.signal import fftconvolve
-
 
 __COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
 
@@ -30,12 +31,15 @@ def _get_common_distribution(
         raise NotImplementedError
 
 
-class PointModel:
-    """PointModel is a container for all model parameters and is responsible of
-    generating a realization of the process through make_realization.
+class AbstractModel(ABC):
+    """
+    Abstract class for FPP Models containing commonly used methods.
+    Parameters
+    ----------
+    gamma Intermittency parameter of the process
+    total_duration Total duration of the process
+    dt Time step
 
-    Uses a ForcingGenerator to generate the forcing, this is by default
-    a StandardForcingGenerator.
     """
 
     def __init__(self, gamma: float, total_duration: float, dt: float):
@@ -43,9 +47,83 @@ class PointModel:
         self.T = total_duration
         self.dt = dt
         self._times: np.ndarray = np.arange(0, total_duration, dt)
-        self._forcing_generator: ForcingGenerator = StandardForcingGenerator()
         self._pulse_generator: ShortPulseGenerator = ExponentialShortPulseGenerator()
-        self._last_used_forcing: Forcing = None
+        self._last_used_forcing = None
+
+    def _add_pulse_to_signal(
+        self, signal: np.ndarray, pulse_parameters: PulseParameters
+    ):
+        """
+        Adds a pulse to the provided signal array. Uses self._pulse_generator to generate the pulse shape, this can
+        either be a ps.PulseGenerator or a ps.ShortPulseGenerator.
+        Parameters
+        ----------
+        signal Signal array under construction
+        pulse_parameters Parameters of the current pulse
+
+        """
+        if isinstance(self._pulse_generator, PulseGenerator):
+            signal += pulse_parameters.amplitude * self._pulse_generator.get_pulse(
+                self._times - pulse_parameters.arrival_time,
+                pulse_parameters.duration,
+            )
+            return
+
+        if isinstance(self._pulse_generator, ShortPulseGenerator):
+            cutoff = self._pulse_generator.get_cutoff(pulse_parameters.duration)
+            from_index = max(int((pulse_parameters.arrival_time - cutoff) / self.dt), 0)
+            to_index = min(
+                int((pulse_parameters.arrival_time + cutoff) / self.dt),
+                len(self._times),
+            )
+
+            pulse = pulse_parameters.amplitude * self._pulse_generator.get_pulse(
+                self._times[from_index:to_index] - pulse_parameters.arrival_time,
+                pulse_parameters.duration,
+            )
+            signal[from_index:to_index] += pulse
+            return
+
+        raise NotImplementedError(
+            "Pulse shape has to inherit from PulseShape or ShortPulseShape"
+        )
+
+    def get_last_used_forcing(self):
+        """
+        Returns the latest used forcing. If several realizations of the process are run only the latest forcing will be
+        available.
+        -------
+        """
+        return self._last_used_forcing
+
+    def set_pulse_shape(
+        self, pulse_generator: Union[PulseGenerator, ShortPulseGenerator]
+    ):
+        """
+        Parameters
+        ----------
+        pulse_shape Instance of PulseShape, get_pulse will be called for each pulse when making a realization.
+        """
+        self._pulse_generator = pulse_generator
+
+
+class PointModel(AbstractModel):
+    """PointModel is a container for all model parameters and is responsible for
+    generating a realization of the process through make_realization.
+
+    Uses a ForcingGenerator to generate the forcing, this is by default
+    a StandardForcingGenerator.
+
+    Parameters
+    ----------
+    gamma Intermittency parameter of the process
+    total_duration Total duration of the process
+    dt Time step
+    """
+
+    def __init__(self, gamma: float, total_duration: float, dt: float):
+        super(PointModel, self).__init__(gamma, total_duration, dt)
+        self._forcing_generator: ForcingGenerator = StandardForcingGenerator()
         self._noise = None
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -62,14 +140,6 @@ class PointModel:
         self._last_used_forcing = forcing
 
         return self._times, result
-
-    def get_last_used_forcing(self) -> Forcing:
-        """
-        Returns the latest used forcing. If several realizations of the process are run only the latest forcing will be
-        available.
-        -------
-        """
-        return self._last_used_forcing
 
     def set_custom_forcing_generator(self, forcing_generator: ForcingGenerator):
         self._forcing_generator = forcing_generator
@@ -109,16 +179,6 @@ class PointModel:
             )
         else:
             raise NotImplementedError
-
-    def set_pulse_shape(
-        self, pulse_generator: Union[PulseGenerator, ShortPulseGenerator]
-    ):
-        """
-        Parameters
-        ----------
-        pulse_shape Instance of PulseShape, get_pulse will be called for each pulse when making a realization.
-        """
-        self._pulse_generator = pulse_generator
 
     def add_noise(
         self,
@@ -176,40 +236,25 @@ class PointModel:
 
         return self._noise
 
-    def _add_pulse_to_signal(
-        self, signal: np.ndarray, pulse_parameters: PulseParameters
-    ):
-        """
-        Adds a pulse to the provided signal array. Uses self._pulse_generator to generate the pulse shape, this can
-        either be a ps.PulseGenerator or a ps.ShortPulseGenerator.
-        Parameters
-        ----------
-        signal Signal array under construction
-        pulse_parameters Parameters of the current pulse
 
-        """
-        if isinstance(self._pulse_generator, PulseGenerator):
-            signal += pulse_parameters.amplitude * self._pulse_generator.get_pulse(
-                self._times - pulse_parameters.arrival_time,
-                pulse_parameters.duration,
-            )
-            return
+class TwoPointModel(AbstractModel):
+    def __init__(self, gamma: float, total_duration: float, dt: float):
+        super(TwoPointModel, self).__init__(gamma, total_duration, dt)
+        self._forcing_generator: TwoPointForcingGenerator = TwoPointForcingGenerator()
 
-        if isinstance(self._pulse_generator, ShortPulseGenerator):
-            cutoff = self._pulse_generator.get_cutoff(pulse_parameters.duration)
-            from_index = max(int((pulse_parameters.arrival_time - cutoff) / self.dt), 0)
-            to_index = min(
-                int((pulse_parameters.arrival_time + cutoff) / self.dt),
-                len(self._times),
-            )
+    def make_realization(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        signal_a = np.zeros(len(self._times))
+        signal_b = np.zeros(len(self._times))
+        forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
 
-            pulse = pulse_parameters.amplitude * self._pulse_generator.get_pulse(
-                self._times[from_index:to_index] - pulse_parameters.arrival_time,
-                pulse_parameters.duration,
-            )
-            signal[from_index:to_index] += pulse
-            return
+        for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
+            pulse_parameters_a = forcing.get_pulse_parameters_a(k)
+            pulse_parameters_b = forcing.get_pulse_parameters_b(k)
+            self._add_pulse_to_signal(signal_a, pulse_parameters_a)
+            self._add_pulse_to_signal(signal_b, pulse_parameters_b)
 
-        raise NotImplementedError(
-            "Pulse shape has to inherit from PulseShape or ShortPulseShape"
-        )
+        self._last_used_forcing = forcing
+        return self._times, signal_a, signal_b
+
+    def set_custom_forcing_generator(self, forcing_generator: TwoPointForcingGenerator):
+        self._forcing_generator = forcing_generator

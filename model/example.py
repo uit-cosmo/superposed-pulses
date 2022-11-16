@@ -102,3 +102,12 @@ plt.show()
 forcing = model.get_last_used_forcing()
 plt.hist(forcing.durations)
 plt.show()
+
+# Two point model example
+model = pm.TwoPointModel(gamma=0.1, total_duration=100, dt=0.01)
+model.set_pulse_shape(ps.ExponentialShortPulseGenerator(tolerance=1e-50))
+times, signal_a, signal_b = model.make_realization()
+
+plt.plot(times, signal_a)
+plt.plot(times, signal_b)
+plt.show()
