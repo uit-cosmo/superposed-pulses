@@ -4,6 +4,7 @@ from typing import Callable, Tuple, Union
 import numpy as np
 from tqdm import tqdm
 from model.forcing import (
+    Forcing,
     StandardForcingGenerator,
     ForcingGenerator,
     PulseParameters,
@@ -14,6 +15,7 @@ from model.pulse_shape import (
     PulseGenerator,
 )
 from model.two_point_forcing import TwoPointForcingGenerator
+from scipy.signal import fftconvolve
 
 __COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
 
@@ -30,7 +32,15 @@ def _get_common_distribution(
 
 
 class AbstractModel(ABC):
-    """Abstract class for FPP Models containing commonly used methods."""
+    """
+    Abstract class for FPP Models containing commonly used methods.
+    Parameters
+    ----------
+    gamma Intermittency parameter of the process
+    total_duration Total duration of the process
+    dt Time step
+
+    """
 
     def __init__(self, gamma: float, total_duration: float, dt: float):
         self.gamma = gamma
@@ -98,16 +108,23 @@ class AbstractModel(ABC):
 
 
 class PointModel(AbstractModel):
-    """PointModel is a container for all model parameters and is responsible of
+    """PointModel is a container for all model parameters and is responsible for
     generating a realization of the process through make_realization.
 
     Uses a ForcingGenerator to generate the forcing, this is by default
     a StandardForcingGenerator.
+
+    Parameters
+    ----------
+    gamma Intermittency parameter of the process
+    total_duration Total duration of the process
+    dt Time step
     """
 
     def __init__(self, gamma: float, total_duration: float, dt: float):
         super(PointModel, self).__init__(gamma, total_duration, dt)
         self._forcing_generator: ForcingGenerator = StandardForcingGenerator()
+        self._noise = None
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
@@ -117,7 +134,11 @@ class PointModel(AbstractModel):
             pulse_parameters = forcing.get_pulse_parameters(k)
             self._add_pulse_to_signal(result, pulse_parameters)
 
+        if self._noise is not None:
+            result += self._discretize_noise(forcing)
+
         self._last_used_forcing = forcing
+
         return self._times, result
 
     def set_custom_forcing_generator(self, forcing_generator: ForcingGenerator):
@@ -159,15 +180,64 @@ class PointModel(AbstractModel):
         else:
             raise NotImplementedError
 
+    def add_noise(
+        self,
+        noise_to_signal_ratio: float,
+        seed: Union[None, int] = None,
+        noise_type: str = "additive",
+    ) -> None:
+        """
+        Specifies noise for realization.
+        Parameters
+        ----------
+        noise_to_signal_ratio: float, defined as X_rms/S_rms where X is noise and S is signal.
+        seed: None or int, seed for the noise generator
+        noise_type: str
+            "additive": additive noise
+            "dynamic": dynamic noise (only applicable for constant duration times)
+            "both": both additive and dynamic noise
+        """
+        assert noise_type in {"additive", "dynamic", "both"}
+        assert seed is None or isinstance(seed, int)
+        assert noise_to_signal_ratio >= 0
+
+        self._noise_type = noise_type
+        self._noise_random_number_generator = np.random.RandomState(seed=seed)
+        mean_amplitude = self._forcing_generator.get_forcing(
+            self._times, gamma=self.gamma
+        ).amplitudes.mean()
+        self._sigma = np.sqrt(noise_to_signal_ratio * self.gamma) * mean_amplitude
+
+        self._noise = np.zeros(len(self._times))
+
+    def _discretize_noise(self, forcing: Forcing) -> np.ndarray:
+        """Discretizes noise for the realization"""
+
+        if self._noise_type in {"additive", "both"}:
+            self._noise += self._sigma * self._noise_random_number_generator.normal(
+                size=len(self._times)
+            )
+
+        if self._noise_type in {"dynamic", "both"}:
+            durations = forcing.durations
+            pulse_duration_constant = np.all(durations == durations[0])
+            assert (
+                pulse_duration_constant
+            ), "Dynamic noise is only applicable for constant duration times."
+
+            kern = self._pulse_generator.get_pulse(
+                np.arange(-self._times[-1] / 2, self._times[-1] / 2, self.dt),
+                durations[0],
+            )
+            dW = self._noise_random_number_generator.normal(
+                scale=np.sqrt(2 * self.dt), size=len(self._times)
+            )
+            self._noise += self._sigma * fftconvolve(dW, kern, "same")
+
+        return self._noise
+
 
 class TwoPointModel(AbstractModel):
-    """Model for a two point filtered process containing all model parameters
-    and responsible for generating a realization of the processes through
-    make_realization.
-
-    Uses a TwoPointForcingGenerator to generate the forcing.
-    """
-
     def __init__(self, gamma: float, total_duration: float, dt: float):
         super(TwoPointModel, self).__init__(gamma, total_duration, dt)
         self._forcing_generator: TwoPointForcingGenerator = TwoPointForcingGenerator()
