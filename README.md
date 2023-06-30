@@ -20,7 +20,7 @@ pip install -e .
 The simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times, write
 ```Python
 import matplotlib.pyplot as plt
-import model.point_model as pm
+import superposedpulses.point_model as pm
 
 model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
@@ -28,5 +28,5 @@ times, signal = model.make_realization()
 plt.plot(times, signal)
 plt.show()
 ```
-Take a look at `superposed-pulses/model/example.py` to find out how to change amplitudes, waiting times, duration times and the pulse shape of the process.
+Take a look at `superposed-pulses/superposedpulses/example.py` to find out how to change amplitudes, waiting times, duration times and the pulse shape of the process.
 
