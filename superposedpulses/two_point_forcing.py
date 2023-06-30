@@ -1,5 +1,5 @@
 from typing import Callable
-from model.forcing import PulseParameters
+from superposedpulses.forcing import PulseParameters
 
 import numpy as np
 

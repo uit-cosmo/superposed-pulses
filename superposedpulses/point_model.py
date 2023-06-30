@@ -3,18 +3,18 @@ from typing import Callable, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
-from model.forcing import (
+from superposedpulses.forcing import (
     Forcing,
     StandardForcingGenerator,
     ForcingGenerator,
     PulseParameters,
 )
-from model.pulse_shape import (
+from superposedpulses.pulse_shape import (
     ShortPulseGenerator,
     ExponentialShortPulseGenerator,
     PulseGenerator,
 )
-from model.two_point_forcing import TwoPointForcingGenerator
+from superposedpulses.two_point_forcing import TwoPointForcingGenerator
 from scipy.signal import fftconvolve
 
 __COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
