@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-name = "superposed-pulses"
+name = "superposedpulses"
 
 with open("README.md") as f:
     long_description = f.read()
@@ -19,7 +19,7 @@ setup(
     download_url="https://github.com/uit-cosmo/3ppy/archive/refs/tags/1.1.tar.gz",
     license="MiT",
     version="1.2",
-    packages=["model"],
+    packages=["superposedpulses"],
     python_requires=">=3.0",
     install_requires=[
         "numpy>=1.15.0",
