@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-name = "superposedpulses"
+name = "superposed-pulses"
 
 with open("README.md") as f:
     long_description = f.read()
