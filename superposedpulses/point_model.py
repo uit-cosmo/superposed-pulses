@@ -174,7 +174,7 @@ class PointModel(AbstractModel):
             average_duration: float, defaults to 1.
         """
         if duration_distribution in __COMMON_DISTRIBUTIONS__:
-            self._forcing_generator.set_amplitude_distribution(
+            self._forcing_generator.set_duration_distribution(
                 _get_common_distribution(duration_distribution, average_duration)
             )
         else:
