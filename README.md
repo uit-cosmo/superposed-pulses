@@ -22,11 +22,10 @@ The simplest case, using defaults: exponential pulse shape, exponentially distri
 import matplotlib.pyplot as plt
 import superposedpulses.point_model as pm
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
 
 plt.plot(times, signal)
 plt.show()
 ```
 Take a look at `superposed-pulses/superposedpulses/example.py` to find out how to change amplitudes, waiting times, duration times and the pulse shape of the process.
-
