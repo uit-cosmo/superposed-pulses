@@ -205,9 +205,10 @@ class PointModel(AbstractModel):
         self._noise_type = noise_type
         self._noise_random_number_generator = np.random.RandomState(seed=seed)
 
-        warnings.warn("Calculation of noise rms "
-                      "(1) assumes average duration time is 1 "
-                      "(2) uses numerical mean amplitude")
+        warnstring = """Calculation of noise rms 
+                        (1) assumes average duration time is 1
+                        (2) uses numerical mean amplitude"""
+        warnings.warn(warnstring)
         mean_amplitude = self._forcing_generator.get_forcing(
             self._times, waiting_time=self.waiting_time
         ).amplitudes.mean()
