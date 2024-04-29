@@ -7,7 +7,7 @@ import superposedpulses.pulse_shape as ps
 
 # Simplest case, using defaults: exponential pulse shape, exponentially distributed amplitudes, constant duration times.
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 times, signal = model.make_realization()
 
 plt.plot(times, signal)
@@ -15,7 +15,7 @@ plt.show()
 
 # Double exponential shape
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 model.set_pulse_shape(ps.StandardPulseGenerator("2-exp", lam=0.35))
 times, signal = model.make_realization()
 
@@ -24,7 +24,7 @@ plt.show()
 
 # Adding noise to the signal
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 model.add_noise(noise_to_signal_ratio=0.01, noise_type="additive", seed=None)
 times, signal = model.make_realization()
 
@@ -33,7 +33,7 @@ plt.show()
 
 # Say you want to customise your model a bit: use constant amplitude distribution, and box pulse shapes
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 model.set_amplitude_distribution("deg")
 model.set_pulse_shape(ps.BoxShortPulseGenerator())
 
@@ -45,7 +45,7 @@ plt.show()
 # If you want to implement your own distributions, you can do so by setting a custom ForcingGenerator. Say you want half
 # of your pulses to have amplitude 1, and the other half to have amplitude 2.
 
-model = pm.PointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.PointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 my_forcing_gen = frc.StandardForcingGenerator()
 my_forcing_gen.set_amplitude_distribution(
     lambda k: np.random.randint(low=1, high=3, size=k)
@@ -67,8 +67,8 @@ class MyFancyForcingGenerator(frc.ForcingGenerator):
     def __init__(self):
         pass
 
-    def get_forcing(self, times: np.ndarray, gamma: float) -> frc.Forcing:
-        total_pulses = int(max(times) * gamma)
+    def get_forcing(self, times: np.ndarray, waiting_time: float) -> frc.Forcing:
+        total_pulses = int(max(times) / waiting_time)
         arrival_time_indx = np.random.randint(0, len(times), size=total_pulses)
         amplitudes = np.random.default_rng().exponential(scale=1.0, size=total_pulses)
         durations = amplitudes + np.abs(
@@ -88,7 +88,7 @@ class MyFancyForcingGenerator(frc.ForcingGenerator):
         pass
 
 
-model = pm.PointModel(gamma=10, total_duration=1000, dt=0.01)
+model = pm.PointModel(waiting_time=0.1, total_duration=1000, dt=0.01)
 model.set_custom_forcing_generator(MyFancyForcingGenerator())
 
 times, s = model.make_realization()
@@ -104,7 +104,7 @@ plt.hist(forcing.durations)
 plt.show()
 
 # Two point model example
-model = pm.TwoPointModel(gamma=0.1, total_duration=100, dt=0.01)
+model = pm.TwoPointModel(waiting_time=10.0, total_duration=100, dt=0.01)
 model.set_pulse_shape(ps.ExponentialShortPulseGenerator(tolerance=1e-50))
 times, signal_a, signal_b = model.make_realization()
 

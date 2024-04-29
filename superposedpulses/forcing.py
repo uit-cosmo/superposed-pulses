@@ -53,7 +53,7 @@ class ForcingGenerator(ABC):
     """
 
     @abstractmethod
-    def get_forcing(self, times: np.ndarray, gamma: float) -> Forcing:
+    def get_forcing(self, times: np.ndarray, waiting_time: float) -> Forcing:
         raise NotImplementedError
 
     @abstractmethod
@@ -81,8 +81,8 @@ class StandardForcingGenerator(ForcingGenerator):
         self._amplitude_distribution = None
         self._duration_distribution = None
 
-    def get_forcing(self, times: np.ndarray, gamma: float) -> Forcing:
-        total_pulses = int(max(times) * gamma)
+    def get_forcing(self, times: np.ndarray, waiting_time: float) -> Forcing:
+        total_pulses = int(max(times) / waiting_time)
         arrival_times = np.random.default_rng().uniform(
             low=times[0], high=times[len(times) - 1], size=total_pulses
         )

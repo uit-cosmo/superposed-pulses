@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Callable, Tuple, Union
+import warnings
 
 import numpy as np
 from tqdm import tqdm
@@ -36,14 +37,14 @@ class AbstractModel(ABC):
     Abstract class for FPP Models containing commonly used methods.
     Parameters
     ----------
-    gamma Intermittency parameter of the process
+    waiting_time Average time between pulses
     total_duration Total duration of the process
     dt Time step
 
     """
 
-    def __init__(self, gamma: float, total_duration: float, dt: float):
-        self.gamma = gamma
+    def __init__(self, waiting_time: float, total_duration: float, dt: float):
+        self.waiting_time = waiting_time
         self.T = total_duration
         self.dt = dt
         self._times: np.ndarray = np.arange(0, total_duration, dt)
@@ -116,19 +117,19 @@ class PointModel(AbstractModel):
 
     Parameters
     ----------
-    gamma Intermittency parameter of the process
+    waiting_time Average time between pulses
     total_duration Total duration of the process
     dt Time step
     """
 
-    def __init__(self, gamma: float, total_duration: float, dt: float):
-        super(PointModel, self).__init__(gamma, total_duration, dt)
+    def __init__(self, waiting_time: float, total_duration: float, dt: float):
+        super(PointModel, self).__init__(waiting_time, total_duration, dt)
         self._forcing_generator: ForcingGenerator = StandardForcingGenerator()
         self._noise = None
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
-        forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
+        forcing = self._forcing_generator.get_forcing(self._times, waiting_time=self.waiting_time)
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters = forcing.get_pulse_parameters(k)
@@ -203,10 +204,16 @@ class PointModel(AbstractModel):
 
         self._noise_type = noise_type
         self._noise_random_number_generator = np.random.RandomState(seed=seed)
+
+        warnings.warn("Calculation of noise rms "
+                      "(1) assumes average duration time is 1 "
+                      "(2) uses numerical mean amplitude")
         mean_amplitude = self._forcing_generator.get_forcing(
-            self._times, gamma=self.gamma
+            self._times, waiting_time=self.waiting_time
         ).amplitudes.mean()
-        self._sigma = np.sqrt(noise_to_signal_ratio * self.gamma) * mean_amplitude
+        gamma = 1./self.waiting_time
+
+        self._sigma = np.sqrt(noise_to_signal_ratio * gamma) * mean_amplitude
 
         self._noise = np.zeros(len(self._times))
 
@@ -238,14 +245,14 @@ class PointModel(AbstractModel):
 
 
 class TwoPointModel(AbstractModel):
-    def __init__(self, gamma: float, total_duration: float, dt: float):
-        super(TwoPointModel, self).__init__(gamma, total_duration, dt)
+    def __init__(self, waiting_time: float, total_duration: float, dt: float):
+        super(TwoPointModel, self).__init__(waiting_time, total_duration, dt)
         self._forcing_generator: TwoPointForcingGenerator = TwoPointForcingGenerator()
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         signal_a = np.zeros(len(self._times))
         signal_b = np.zeros(len(self._times))
-        forcing = self._forcing_generator.get_forcing(self._times, gamma=self.gamma)
+        forcing = self._forcing_generator.get_forcing(self._times, waiting_time=self.waiting_time)
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters_a = forcing.get_pulse_parameters_a(k)
