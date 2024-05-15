@@ -78,8 +78,8 @@ class TwoPointForcingGenerator:
         self._duration_distribution = lambda k: np.ones(k)
         self._delay_distribution = lambda k: np.ones(k)
 
-    def get_forcing(self, times: np.ndarray, gamma: float) -> TwoPointForcing:
-        total_pulses = int(max(times) * gamma)
+    def get_forcing(self, times: np.ndarray, waiting_time: float) -> TwoPointForcing:
+        total_pulses = int(max(times) / waiting_time )
         arrival_times = np.random.default_rng().uniform(
             low=times[0], high=times[len(times) - 1], size=total_pulses
         )
