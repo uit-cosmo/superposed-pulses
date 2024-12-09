@@ -19,7 +19,8 @@ from superposedpulses.distributions import _sample_asymm_laplace
 from superposedpulses.two_point_forcing import TwoPointForcingGenerator
 from scipy.signal import fftconvolve
 
-__COMMON_DISTRIBUTIONS__ = ["exp", "deg", "laplace"]
+__AMPLITUDE_DISTRIBUTIONS__ = ["exp", "deg", "laplace"]
+__DURATION_TIME_DISTRIBUTIONS__ = ["exp", "deg"]
 
 
 def _get_common_distribution(
@@ -157,7 +158,10 @@ class PointModel(AbstractModel):
         self._forcing_generator = forcing_generator
 
     def set_amplitude_distribution(
-        self, amplitude_distribution: str, average_amplitude: float = 1.0
+        self,
+        amplitude_distribution: str,
+        average_amplitude: float = 1.0,
+        shape: float = 0.0,
     ):
         """Sets the amplitude distribution to be used by the forcing.
 
@@ -166,16 +170,22 @@ class PointModel(AbstractModel):
                 'exp': exponential with scale parameter average_amplitude
                 'deg': degenerate with location average_amplitude
             average_amplitude: float, defaults to 1.
+            shape: float, optional shape parameter. Defaults to 0.
         """
-        if amplitude_distribution in __COMMON_DISTRIBUTIONS__:
+        if amplitude_distribution in __AMPLITUDE_DISTRIBUTIONS__:
             self._forcing_generator.set_amplitude_distribution(
-                _get_common_distribution(amplitude_distribution, average_amplitude)
+                _get_common_distribution(
+                    amplitude_distribution, average_amplitude, shape
+                )
             )
         else:
             raise NotImplementedError
 
     def set_duration_distribution(
-        self, duration_distribution: str, average_duration: float = 1.0
+        self,
+        duration_distribution: str,
+        average_duration: float = 1.0,
+        shape: float = 0.0,
     ):
         """Sets the amplitude distribution to be used by the forcing.
 
@@ -184,10 +194,11 @@ class PointModel(AbstractModel):
                 'exp': exponential with scale parameter average_duration
                 'deg': degenerate with location average_duration
             average_duration: float, defaults to 1.
+            shape: float, optional shape parameter. Defaults to 0.
         """
-        if duration_distribution in __COMMON_DISTRIBUTIONS__:
+        if duration_distribution in __DURATION_TIME_DISTRIBUTIONS__:
             self._forcing_generator.set_duration_distribution(
-                _get_common_distribution(duration_distribution, average_duration)
+                _get_common_distribution(duration_distribution, average_duration, shape)
             )
         else:
             raise NotImplementedError
