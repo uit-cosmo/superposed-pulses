@@ -15,19 +15,28 @@ from superposedpulses.pulse_shape import (
     ExponentialShortPulseGenerator,
     PulseGenerator,
 )
+from superposedpulses.distributions import _sample_asymm_laplace
 from superposedpulses.two_point_forcing import TwoPointForcingGenerator
 from scipy.signal import fftconvolve
 
-__COMMON_DISTRIBUTIONS__ = ["exp", "deg"]
+__COMMON_DISTRIBUTIONS__ = ["exp", "deg", "laplace"]
 
 
 def _get_common_distribution(
-    distribution_name: str, average: float
+    distribution_name: str, average: float, shape: float
 ) -> Callable[[int], np.ndarray]:
     if distribution_name == "exp":
         return lambda k: np.random.default_rng().exponential(scale=average, size=k)
     elif distribution_name == "deg":
         return lambda k: average * np.ones(k)
+    elif distribution_name == "laplace":
+        if shape == 0.5:
+            # The average is identically 0.
+            # We treat average as the rms-value instead.
+            scale = 2 ** (-0.5) * average
+        else:
+            scale = 0.5 * average / (1 - 2 * shape)
+        return lambda k: _sample_asymm_laplace(scale, shape, size=k)
     else:
         raise NotImplementedError
 
@@ -129,7 +138,9 @@ class PointModel(AbstractModel):
 
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray]:
         result = np.zeros(len(self._times))
-        forcing = self._forcing_generator.get_forcing(self._times, waiting_time=self.waiting_time)
+        forcing = self._forcing_generator.get_forcing(
+            self._times, waiting_time=self.waiting_time
+        )
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters = forcing.get_pulse_parameters(k)
@@ -212,7 +223,7 @@ class PointModel(AbstractModel):
         mean_amplitude = self._forcing_generator.get_forcing(
             self._times, waiting_time=self.waiting_time
         ).amplitudes.mean()
-        gamma = 1./self.waiting_time
+        gamma = 1.0 / self.waiting_time
 
         self._sigma = np.sqrt(noise_to_signal_ratio * gamma) * mean_amplitude
 
@@ -253,7 +264,9 @@ class TwoPointModel(AbstractModel):
     def make_realization(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         signal_a = np.zeros(len(self._times))
         signal_b = np.zeros(len(self._times))
-        forcing = self._forcing_generator.get_forcing(self._times, waiting_time=self.waiting_time)
+        forcing = self._forcing_generator.get_forcing(
+            self._times, waiting_time=self.waiting_time
+        )
 
         for k in tqdm(range(forcing.total_pulses), position=0, leave=True):
             pulse_parameters_a = forcing.get_pulse_parameters_a(k)
