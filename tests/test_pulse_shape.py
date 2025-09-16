@@ -1,6 +1,7 @@
 import superposedpulses.pulse_shape as ps
 import pytest
 import numpy as np
+import pytest
 
 
 def test_standard_pulse_generator_initialization():
@@ -37,6 +38,7 @@ def test_standard_pulse_generator_get_pulse_1_exp(times, duration):
     assert pulse[-1] < 1e-5
 
 
+@pytest.mark.filterwarnings("ignore::Warning")
 def test_standard_pulse_generator_get_pulse_lorentz(times, duration):
     """Test the 'lorentz' pulse shape."""
     gen = ps.StandardPulseGenerator(shape_name="lorentz")

@@ -1,5 +1,6 @@
 import superposedpulses as sp
 import numpy as np
+import pytest
 
 
 def test_abstract_model_initialization():
@@ -56,6 +57,7 @@ def test_point_model_set_duration_distribution():
     assert np.all(forcing.durations == 1.0)  # Degenerate distribution is constant
 
 
+@pytest.mark.filterwarnings("ignore::Warning")
 def test_point_model_add_noise():
     """Test adding noise to PointModel."""
     model = sp.PointModel(waiting_time=10.0, total_duration=100.0, dt=0.01)
