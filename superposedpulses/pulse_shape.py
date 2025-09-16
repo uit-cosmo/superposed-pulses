@@ -55,6 +55,8 @@ class StandardPulseGenerator(PulseGenerator):
         self, times: np.ndarray, duration: float, tolerance: float = 1e-5
     ) -> np.ndarray:
 
+        assert len(times) > 0, "times array must be non-empty"
+
         kern = self._get_generator(self._shape_name)(times, duration, self._kwargs)
         err = max(np.abs(kern[0]), np.abs(kern[-1]))
         if err > tolerance:
