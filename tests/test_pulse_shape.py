@@ -89,6 +89,7 @@ def test_standard_pulse_generator_empty_times(duration):
     with pytest.raises(AssertionError):
         gen.get_pulse(np.array([]), duration)
 
+
 def test_short_pulse_generator_empty_times(duration):
     """Test behavior with an empty times array."""
     gen = ps.ExponentialShortPulseGenerator()
