@@ -5,11 +5,10 @@ import numpy as np
 def test_moments_of_realization():
     """Testing the first two moments of a realization against theory.
 
-    The analytical expressions are provided in the PhD thesis https://munin.uit.no/handle/10037/21170
-    on page 38. Comment to reviewer: feel free to exchange the reference with an older one.
+    The analytical expressions are provided in Garcia et al. Phys. Plasmas 23, 052308 (2016)
 
-    Equation (3.9a) is used for the mean value of the realization.
-    Equation (3.9b) is used for the root mean square value of the realization.
+    Equation 16 is used for the mean value of the realization.
+    Equation 23 is used for the root mean square value of the realization.
 
     """
     waiting_time = 100
